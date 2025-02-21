@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HLS</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body {
+            margin: 0;
+            background: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <video id="video" controls autoplay playsinline></video>
+
+    <script>
+        var video = document.getElementById('video');
+        var videoSrc = '/hls/live.m3u8';
+
+        if (Hls.isSupported()) {
+            var hls = new Hls();
+            hls.loadSource(videoSrc);
+            hls.attachMedia(video);
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = videoSrc;
+        }
+
+        video.volume = 1.0;
+        video.muted = false;
+        video.play().catch(function(error) {
+            console.log('autostart blocked');
+        });
+
+        document.addEventListener('click', function () {
+            video.muted = false;
+            video.play();
+        }, { once: true });
+    </script>
+</body>
+</html>
