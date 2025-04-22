@@ -86,26 +86,9 @@ done
 ```
 New script
 ```sh
-#!/bin/bash
-
-threshold=0.9
-
 while true; do
-echo "Запуск FFmpeg..."
-ffmpeg -i rtmp://localhost:1935/publish/live -c:v hevc_mediacodec -b:v 2000k -c:a libopus -b:a 128k -f mpegts "srt://ip:port?latency=2000000" 2>&1 | while read -r line; do
-echo "$line"
-if echo "$line" | grep -q "X="; then
-value=$(echo "$line" | grep -oP "X=\K[0-9.]+")
-echo "Обнаружено X=$value"
-if (( $(echo "$value < $threshold" | bc -l) )); then
-echo "X меньше порога ($value < $threshold), перезапуск..."
-pkill -f "ffmpeg.*rtmp://localhost:1935/publish/live"
-break
-fi
-fi
-done
-
-echo "FFmpeg завершился или был остановлен. Перезапуск через 1 секунду..."
+ffmpeg -i rtmp://localhost:1935/publish/live -c:v hevc_mediacodec -b:v 2000k -c:a libopus -b:a 128k -f mpegts "srt://IP:PORT?latency=2000000"
+echo "FFmpeg завершился. Перезапуск через 1 секунд..."
 sleep 1
 done
 ```
