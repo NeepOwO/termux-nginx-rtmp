@@ -98,47 +98,44 @@ New script 2
 #!/bin/bash
 
 threshold=0.9
-inactive_timeout=5  # секунд
+inactive_timeout=5
 
 while true; do
     echo "Запуск FFmpeg..."
     last_update=$(date +%s)
 
-ffmpeg -i rtmp://localhost:1935/publish/live -c:v hevc_mediacodec -pix_fmt nv12 -b:v 2000k -c:a libopus -b:a 128k -ar 48000 -f mpegts "srt://IP:PORT?latency=2000000" 2>&1 | {
-        while IFS= read -r line; do
-            echo "$line"
-            last_update=$(date +%s)
+    coproc FFPROC {
+        ffmpeg -i rtmp://localhost:1935/publish/live -c:v hevc_mediacodec -pix_fmt nv12 -b:v 2000k -c:a libopus -b:a 128k -ar 48000 -f mpegts "srt://IP:PORT?latency=2000000&maxbw=0" 2>&1
+    }
 
-            if echo "$line" | grep -q "X="; then
-                value=$(echo "$line" | grep -oP "X=\K[0-9.]+")
-                echo "Обнаружено X=$value"
-                if (( $(echo "$value < $threshold" | bc -l) )); then
-                    echo "X меньше порога ($value < $threshold), перезапуск..."
-                    pkill -f "ffmpeg.*rtmp://localhost:1935/publish/live"
-                    break
-                fi
+    while read -r line <&"${FFPROC[0]}"; do
+        echo "$line"
+        last_update=$(date +%s)
+
+        # Проверка X
+        if [[ "$line" == *"X="* ]]; then
+            value=$(echo "$line" | grep -oP "X=\K[0-9.]+")
+            echo "Обнаружено X=$value"
+            if (( $(echo "$value < $threshold" | bc -l) )); then
+                echo "X меньше порога ($value < $threshold), перезапуск..."
+                kill "${FFPROC_PID}"
+                break
             fi
-        done
-    } &
+        fi
 
-    ffmpeg_monitor_pid=$!
-
-    # Следим за бездействием
-    while kill -0 $ffmpeg_monitor_pid 2>/dev/null; do
+        # Проверка времени
         now=$(date +%s)
         diff=$((now - last_update))
-        if [ "$diff" -ge "$inactive_timeout" ]; then
-            echo "Нет активности $diff сек. Перезапуск FFmpeg..."
-            pkill -f "ffmpeg.*rtmp://localhost:1935/publish/live"
+        if (( diff >= inactive_timeout )); then
+            echo "Нет активности $diff сек. Перезапуск..."
+            kill "${FFPROC_PID}"
             break
         fi
-        sleep 1
     done
 
     echo "FFmpeg завершился или был остановлен. Перезапуск через 1 секунду..."
     sleep 1
 done
-
 
 ```
 
