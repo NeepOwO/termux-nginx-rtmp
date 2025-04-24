@@ -98,18 +98,17 @@ New script 2
 #!/bin/bash
 
 threshold=0.9
-inactive_timeout=5  
+inactive_timeout=5  # в секундах
+touch /tmp/last_update_time
 
 while true; do
     echo "Запуск FFmpeg..."
+    date +%s > /tmp/last_update_time
 
-    last_update=$(date +%s)
-
-    ffmpeg -i rtmp://localhost:1935/publish/live -c:v hevc_mediacodec -b:v 2000k -c:a libopus -b:a 128k -ar 48000 -f mpegts "srt://IP:PORT?latency=2000000" 2>&1 | while read -r line; do
+    ffmpeg -i rtmp://localhost:1935/publish/live -c:v hevc_mediacodec -pix_fmt nv12 -b:v 2000k -c:a libopus -b:a 128k -ar 48000 -f mpegts "srt://IP:PORT?latency=2000000" 2>&1 | while read -r line; do
 
         echo "$line"
-        now=$(date +%s)
-        last_update=$now
+        date +%s > /tmp/last_update_time
 
         if echo "$line" | grep -q "X="; then
             value=$(echo "$line" | grep -oP "X=\K[0-9.]+")
@@ -126,6 +125,7 @@ while true; do
     echo "FFmpeg PID: $ffmpeg_pid"
 
     while kill -0 $ffmpeg_pid 2>/dev/null; do
+        last_update=$(cat /tmp/last_update_time)
         now=$(date +%s)
         diff=$((now - last_update))
         if [ "$diff" -ge "$inactive_timeout" ]; then
@@ -139,6 +139,7 @@ while true; do
     echo "FFmpeg завершился или был остановлен. Перезапуск через 1 секунду..."
     sleep 1
 done
+
 
 ```
 
