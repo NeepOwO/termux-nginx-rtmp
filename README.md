@@ -14,12 +14,6 @@ pkg install root-repo
 ```sh
 apt install termux-services openssl gettext
 ```
-```sh
-ln -s $PREFIX/lib/openssl-1.1/libssl.so.1.1 $PREFIX/lib/libssl.so.1.1
-```
-```sh
-ln -s $PREFIX/lib/openssl-1.1/libcrypto.so.1.1 $PREFIX/lib/libcrypto.so.1.1
-```
 
 ## Installation
 
