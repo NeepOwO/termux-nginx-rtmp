@@ -12,8 +12,12 @@ pkg install root-repo
 + openssl-1.1 (legacy)
 + gettext (to inject env variables into nginx config)
 ```sh
-apt install termux-services openssl-1.1 gettext
+apt install termux-services openssl gettext
+```
+```sh
 ln -s $PREFIX/lib/openssl-1.1/libssl.so.1.1 $PREFIX/lib/libssl.so.1.1
+```
+```sh
 ln -s $PREFIX/lib/openssl-1.1/libcrypto.so.1.1 $PREFIX/lib/libcrypto.so.1.1
 ```
 
@@ -21,15 +25,25 @@ ln -s $PREFIX/lib/openssl-1.1/libcrypto.so.1.1 $PREFIX/lib/libcrypto.so.1.1
 
 ```sh
 apt remove nginx # remove any existing nginx installation.
+```
+```sh
 echo "deb https://muxable.github.io/termux-nginx-rtmp/ termux extras" > $PREFIX/etc/apt/sources.list.d/nginx-rtmp.list
+```
+```sh
 apt update --allow-insecure-repositories
+```
+```sh
 apt install nginx-rtmp
 ```
 
 # Tweak nginx.conf
 ```sh
 curl https://raw.githubusercontent.com/NeepOwO/termux-nginx-rtmp/main/nginx-custom.conf > $PREFIX/etc/nginx/nginx.conf.template
+```
+```sh
 envsubst < $PREFIX/etc/nginx/nginx.conf.template > $PREFIX/etc/nginx/nginx.conf
+```
+```sh
 mkdir -p $PREFIX/www/static/ && curl https://raw.githubusercontent.com/NeepOwO/termux-nginx-rtmp/main/stat.xsl > $PREFIX/www/static/stat.xsl
 ```
 # Restart phone
